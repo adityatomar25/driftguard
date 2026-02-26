@@ -1,0 +1,240 @@
+MAJOR PROJECT-2
+SYNOPSIS
+
+ON
+
+DriftGuard: Automated Detection and Reconciliation of
+Infrastructure Drift
+
+
+
+1
+
+Index
+Contents
+
+Page
+Number
+
+1: Abstract
+
+3
+
+2: Introduction
+
+3
+
+3: Problem Statement
+
+4
+
+4: Literature
+
+4
+
+5: Objectives
+
+5
+
+6: Methodology
+
+5
+
+7: System Requirement
+
+6
+
+8: PERT Chart
+
+7
+
+9: References
+
+8
+
+2
+
+1. Abstract
+DriftGuard is an automated DevOps framework designed to detect, classify, and reconcile
+infrastructure drift within environments managed by Infrastructure as Code (IaC). By
+utilizing Terraform’s native planning capabilities, the system compares declared
+configurations against the actual state of cloud resources [1]. DriftGuard employs a
+rule-based classifier and controlled reconciliation workflows to execute safe reapplications
+of code or escalate high-risk discrepancies for manual intervention [7][10]. The process
+concludes with comprehensive audit logging and verification to ensure a closed-loop
+governance cycle.
+
+2. Introduction
+Modern cloud architectures rely on IaC to ensure deployments are repeatable, scalable, and
+auditable. However, "configuration drift"—the divergence between the defined code and the
+live environment—remains a pervasive issue caused by manual emergency "hotfixes" and
+out-of-band changes. While Terraform provides programmatic JSON output that allows for
+reliable drift detection [1][2], most organizations lack the automation to act on this data.
+DriftGuard bridges this gap by integrating Policy-as-Code and GitOps-style reconciliation
+patterns to minimize the risks associated with manual environment management [7][8].
+Modern cloud architectures rely on Infrastructure-as-Code (IaC) for consistent,
+repeatable, and scalable resource management, moving away from error-prone manual
+operations.
+However, a persistent issue is "configuration drift," the silent divergence between the
+live environment's actual state and the state defined in the IaC code. Drift is often
+caused by unscheduled manual changes (e.g., emergency hotfixes), which render the
+IaC repository an unreliable source of truth, leading to failures and security risks.
+While tools like Terraform can detect drift, most organizations lack an automated
+mechanism to act on it.
+DriftGuard uses two core patterns to prevent configuration drift: Policy-as-Code (PaC)
+automatically enforces compliance rules within IaC. GitOps-style Reconciliation
+continuously syncs the live environment with the Git-defined desired state, alerting teams or
+reverting unauthorized changes to ensure code is the single source of truth
+3
+
+3. Problem Statement
+The primary challenges in modern infrastructure management include:
+1.​ Lack of Continuous Visibility: Intermittent manual checks fail to capture real-time
+deviations.
+2.​ Context Blindness: The inability to distinguish between acceptable transient changes
+(e.g., autoscaling events) and unauthorized manual edits.
+3.​ Operational Risk: The danger of automated reconciliation causing production
+outages.​
+Existing solutions like AWS Config or Azure Policy provide a baseline, but DriftGuard
+aims to provide a more granular, environment-aware decision logic tailored to
+multi-cloud IaC workflows [3][5][6].
+
+4. Literature Review
+Current IaC governance often lacks automated reconciliation, with platforms like the ELK
+Stack and Splunk being effective for log aggregation but not sophisticated enough for
+closed-loop IaC drift remediation.[13][14]
+Robust analysis of infrastructure state relies on structured outputs (plan and state JSON)
+from leading IaC tools like Terraform.[1][2]
+Modern practices advocate for specialized tools: Open Policy Agent (OPA) uses Rego for
+centralized policy-as-code enforcement, and Argo CD provides the "closed-loop" mechanism
+by monitoring a Git repository and actively synchronizing the live state.[7][9]
+Furthermore, integrating log anomaly detection techniques, such as DeepLog, with IaC state
+analysis enhances the precision of drift event classification, distinguishing simple changes
+from malicious or erroneous events.[11][12]
+
+4
+
+5. Objectives
+The core objectives of the DriftGuard system are:
+●​ Continuous Detection: Automate the parsing of Terraform plan/show JSON to
+identify state differences [1][2].
+●​ Intelligent Classification: Implement a rule-based engine using OPA concepts to score
+the risk of detected drift [7].
+●​ Hybrid Reconciliation: Establish an environment-aware engine that auto-reconciles
+non-production environments while triggering PR/approval flows for production [8][9].
+●​ State Integrity: Utilize remote backends and state locking to prevent concurrency
+issues during remediation [15].
+●​ Observability & Audit: Integrate GitHub Actions for workflow automation and
+Slack/Email for real-time alerting [19].
+
+6. Methodology
+The DriftGuard methodology follows a four-stage pipeline:
+1.​ Detection: The system executes terraform plan -out=plan and parses the resulting
+JSON via terraform show. It utilizes detailed-exitcode semantics to programmatically
+determine if a drift exists [1][2][16].
+2.​ Classification: A rule engine (YAML or OPA) labels drift events (e.g., "Critical
+Resource Deleted" vs. "Tag Modified") and assigns a risk score [7].
+3.​ Decision Engine: Based on the risk score and environment metadata (Prod vs. Dev),
+the system chooses a path. This is modeled after the Kubernetes Controller pattern,
+ensuring a constant "reconciliation loop" [10][17].
+4.​ Reconciliation & Verification: * Low Risk: Auto-apply via Terraform with
+S3/DynamoDB state locking [15].
+•​ High Risk: Generate a GitHub Pull Request for human review [19].
+•​ Verification: A final "no-diff" plan is run to confirm the environment has returned
+to the desired state.
+
+5
+
+7. System Requirements
+Hardware Requirements
+Processor: Intel Core i5 or equivalent
+RAM: 8 GB minimum
+Storage: 20 GB free disk space
+Operating System: Linux, Windows, or macOS
+
+Software Requirements
+Programming Language: Python 3.x
+Backend Framework: Flask (REST APIs for drift data and actions)
+Frontend Library: React.js (for dashboard and visualization)
+Infrastructure as Code Tool: Terraform
+Cloud / Infrastructure Platform: AWS (Free Tier) or Local Virtual Environment
+Version Control System: Git
+
+Data & Visualization Requirements
+Data Storage: SQLite (for drift events, metadata, and history)
+Visualization: Charts and tables using React-compatible libraries (e.g., Chart.js / Recharts)
+
+Optional Tools
+Containerization: Docker
+Alerting & Notifications: Email or Slack
+
+6
+
+8. PERT Chart
+The project will be executed across several distinct phases. The PERT (Program Evaluation
+and Review Technique) chart will map out the timeline, tasks, and dependencies.
+The primary phases are:
+
+(A detailed PERT chart diagram illustrating task dependencies and timelines will be
+included in the final report.)
+
+7
+
+9. References
+1.​ HashiCorp. Terraform CLI documentation. https://www.terraform.io/cli — core
+Terraform commands and behavior (plan, show, apply).
+2.​ HashiCorp. terraform show -json documentation.
+https://www.terraform.io/cli/commands/show — JSON output format for
+programmatic parsing.
+3.​ Amazon Web Services. AWS Config Developer Guide.
+https://docs.aws.amazon.com/config/latest/developerguide/ — drift detection,
+managed rules, and automatic remediation patterns.
+4.​ Amazon Web Services. AWS Systems Manager documentation.
+https://docs.aws.amazon.com/systems-manager/latest/userguide/ — automation
+and remediation orchestration.
+5.​ Microsoft. Azure Policy documentation.
+https://learn.microsoft.com/azure/governance/policy/ — policy enforcement and
+remediation options for Azure resources.
+6.​ Google Cloud. Config Connector & Config Management.
+https://cloud.google.com/config-connector and
+https://cloud.google.com/config-management — GCP approaches to declarative
+config and governance.
+7.​ Open Policy Agent (OPA) — policy-as-code engine and Rego language.
+https://www.openpolicyagent.org/
+8.​ GitOps resources (Weaveworks / GitOps Manifesto) — GitOps patterns for
+declarative config and reconciliation. https://www.gitops.tech/ and
+https://www.weave.works/technologies/gitops/
+9.​ Argo CD documentation. https://argo-cd.readthedocs.io/ — GitOps controller
+example of reconciliation and drift correction for Kubernetes.
+10.​Kubernetes. Controller pattern and reconciliation loop.
+https://kubernetes.io/docs/concepts/architecture/controller/ — conceptual
+grounding for safe reconciliation controllers and loops.
+11.​He, S., Zhu, J., He, P., & Lyu, M. R. (2017). Log-based Anomaly Detection: A
+Survey and Taxonomy. IEEE — survey of log-based anomaly detection
+techniques (useful background for log-based classification).
+12.​Du, M., Li, F., Zheng, G., & Srikumar, V. (2017). DeepLog: Anomaly Detection
+and Diagnosis from System Logs through Deep Learning. (USENIX/ArXiv) —
+example ML approach for log anomaly detection.
+13.​Elastic. Elasticsearch / ELK Stack documentation. https://www.elastic.co/guide/
+— log aggregation and search for monitoring and alerting.
+14.​Splunk. Splunk Enterprise documentation. https://docs.splunk.com/ —
+8
+
+commercial log analytics reference.
+15.​HashiCorp. Terraform state and backends documentation.
+https://www.terraform.io/language/state — remote state, locking strategies (S3 +
+DynamoDB, etc.).
+16.​HashiCorp. Terraform plan exit codes and -detailed-exitcode usage.
+https://www.terraform.io/cli/commands/plan — automation-friendly exit codes
+for detection logic.
+17.​Google SRE. Site Reliability Engineering: How Google Runs Production
+Systems. https://sre.google/ — operational best-practices for safe automation and
+incident handling.
+18.​HashiCorp Sentinel — policy-as-code for Terraform Enterprise (enterprise
+reference). https://www.hashicorp.com/sentinel
+19.​GitHub. GitHub Actions documentation. https://docs.github.com/actions —
+CI/CD, workflow automation and PR-driven automation patterns.
+
+9
+
+

@@ -1,0 +1,29 @@
+# DriftGuard – Docker Compose (local development)
+# Run: docker compose up
+
+version: "3.8"
+
+services:
+  # FastAPI backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./driftguard:/app/driftguard
+      - ./driftguard.db:/app/driftguard.db
+    environment:
+      - DRIFTGUARD_DB_URL=sqlite:///driftguard.db
+    command: uvicorn driftguard.api:app --host 0.0.0.0 --port 8000 --reload
+
+  # React dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api

@@ -1,0 +1,42 @@
+# DriftGuard – Classification Rules
+# ─────────────────────────────────
+# default: fallback classification when no rule matches
+default: alert
+
+# Risk weights (used to compute a numeric risk score 0–10)
+risk_weights:
+  resource_type:
+    aws_instance: 7
+    aws_security_group: 9
+    aws_db_instance: 8
+    aws_iam_role: 9
+    aws_s3_bucket: 5
+    docker_container: 2
+  action_type:
+    delete: 10
+    replace: 8
+    update: 4
+    create: 2
+  env:
+    prod: 10
+    production: 10
+    stage: 5
+    staging: 5
+    dev: 2
+
+# Resources that always require human approval
+require_approval:
+  - aws_instance
+  - aws_security_group
+  - aws_db_instance
+  - aws_iam_role
+
+# Resources safe for automatic reconciliation (non-prod)
+auto_reconcile:
+  - docker_container
+  - aws_s3_bucket_object
+  - aws_cloudwatch_log_group
+
+# Resources whose drift should be silently ignored (e.g. autoscaling)
+ignore:
+  - aws_autoscaling_group
