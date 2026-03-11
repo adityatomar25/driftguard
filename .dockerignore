@@ -1,0 +1,19 @@
+# .dockerignore – keep images lean
+.git
+.github
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+venv/
+.venv/
+node_modules/
+.DS_Store
+driftguard.db
+*.db
+tests/
+terraform/
+terraform-aws/
+k8s/
+*.md
+Major Synopsis-2.txt
