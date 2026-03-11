@@ -8,6 +8,7 @@ function App() {
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [seeding, setSeeding] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -42,6 +43,19 @@ function App() {
       fetchData()
     } catch (err) {
       alert('Action failed: ' + err.message)
+    }
+  }
+
+  const handleSeed = async () => {
+    setSeeding(true)
+    try {
+      const res = await fetch(`${API}/seed`, { method: 'POST' })
+      if (!res.ok) throw new Error('Seed request failed')
+      await fetchData()
+    } catch (err) {
+      alert('Seed failed: ' + err.message)
+    } finally {
+      setSeeding(false)
     }
   }
 
@@ -90,7 +104,20 @@ function App() {
       {/* Events table */}
       <p className="section-title">Drift Events</p>
       {events.length === 0 ? (
-        <div className="loading">No drift events recorded yet. Run the pipeline to detect drift.</div>
+        <div className="loading" style={{ textAlign: 'center' }}>
+          <p>No drift events recorded yet.</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+            Run the pipeline to detect drift, or load demo data to explore the dashboard.
+          </p>
+          <button
+            className="btn btn-reconcile"
+            style={{ fontSize: '1rem', padding: '10px 24px' }}
+            onClick={handleSeed}
+            disabled={seeding}
+          >
+            {seeding ? '🌱 Seeding…' : '🌱 Load Demo Data'}
+          </button>
+        </div>
       ) : (
         <table className="events-table">
           <thead>

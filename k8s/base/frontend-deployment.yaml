@@ -1,0 +1,46 @@
+# DriftGuard Frontend – React dashboard served by nginx
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: driftguard-frontend
+  namespace: driftguard
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: driftguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/part-of: driftguard
+    spec:
+      containers:
+        - name: frontend
+          image: driftguard-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 30

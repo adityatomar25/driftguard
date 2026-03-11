@@ -1,0 +1,17 @@
+# Internal ClusterIP service for the frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: driftguard-frontend
+  namespace: driftguard
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: driftguard
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http

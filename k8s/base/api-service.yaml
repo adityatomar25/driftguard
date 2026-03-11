@@ -1,0 +1,17 @@
+# Internal ClusterIP service for the API
+apiVersion: v1
+kind: Service
+metadata:
+  name: driftguard-api
+  namespace: driftguard
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: driftguard
+spec:
+  selector:
+    app.kubernetes.io/name: api
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http

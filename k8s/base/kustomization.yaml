@@ -1,0 +1,21 @@
+# Kustomize – apply everything with: kubectl apply -k k8s/base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: driftguard
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - pvc.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - scheduler-cronjob.yaml
+  - ingress.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: driftguard
+      app.kubernetes.io/managed-by: kustomize

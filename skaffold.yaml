@@ -1,0 +1,40 @@
+# Skaffold – for fast local development on Kubernetes
+# Install: https://skaffold.dev/docs/install/
+# Usage:   skaffold dev          (auto-rebuild + redeploy on save)
+#          skaffold run          (one-shot build + deploy)
+
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: driftguard
+
+build:
+  artifacts:
+    - image: driftguard-api
+      context: .
+      docker:
+        dockerfile: Dockerfile
+    - image: driftguard-frontend
+      context: ./frontend
+      docker:
+        dockerfile: Dockerfile
+  local:
+    push: false
+    useBuildkit: true
+
+manifests:
+  kustomize:
+    paths:
+      - k8s/base
+
+portForward:
+  - resourceType: service
+    resourceName: driftguard-api
+    namespace: driftguard
+    port: 8000
+    localPort: 8000
+  - resourceType: service
+    resourceName: driftguard-frontend
+    namespace: driftguard
+    port: 80
+    localPort: 3000

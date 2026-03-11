@@ -1,0 +1,53 @@
+# Shared configuration for API + Scheduler
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: driftguard-config
+  namespace: driftguard
+  labels:
+    app.kubernetes.io/part-of: driftguard
+data:
+  DRIFTGUARD_DB_URL: "sqlite:////data/driftguard.db"
+  TF_DIR: "/terraform"
+  RULES_PATH: "/config/config.yml"
+  SCHEDULER_INTERVAL: "300"
+  LOG_LEVEL: "INFO"
+
+  # Classification rules – mounted as a file inside pods
+  config.yml: |
+    # DriftGuard – Classification Rules
+    default: alert
+
+    risk_weights:
+      resource_type:
+        aws_instance: 7
+        aws_security_group: 9
+        aws_db_instance: 8
+        aws_iam_role: 9
+        aws_s3_bucket: 5
+        docker_container: 2
+      action_type:
+        delete: 10
+        replace: 8
+        update: 4
+        create: 2
+      env:
+        prod: 10
+        production: 10
+        stage: 5
+        staging: 5
+        dev: 2
+
+    require_approval:
+      - aws_instance
+      - aws_security_group
+      - aws_db_instance
+      - aws_iam_role
+
+    auto_reconcile:
+      - docker_container
+      - aws_s3_bucket_object
+      - aws_cloudwatch_log_group
+
+    ignore:
+      - aws_autoscaling_group

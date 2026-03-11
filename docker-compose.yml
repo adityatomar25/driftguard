@@ -13,10 +13,30 @@ services:
       - "8000:8000"
     volumes:
       - ./driftguard:/app/driftguard
-      - ./driftguard.db:/app/driftguard.db
+      - driftguard-data:/data
     environment:
-      - DRIFTGUARD_DB_URL=sqlite:///driftguard.db
+      - DRIFTGUARD_DB_URL=sqlite:////data/driftguard.db
     command: uvicorn driftguard.api:app --host 0.0.0.0 --port 8000 --reload
+
+  # Scheduler – runs drift detection on a loop
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./driftguard:/app/driftguard
+      - driftguard-data:/data
+    environment:
+      - DRIFTGUARD_DB_URL=sqlite:////data/driftguard.db
+    command: >
+      python -m driftguard.scheduler
+        --tf-dir /terraform
+        --rules driftguard/config.yml
+        --db sqlite:////data/driftguard.db
+        --interval 300
+        --skip-init
+    depends_on:
+      - api
 
   # React dashboard
   frontend:
@@ -24,6 +44,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - api
+
+volumes:
+  driftguard-data:
