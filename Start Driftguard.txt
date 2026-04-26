@@ -1,0 +1,13 @@
+adityatomar@Adityas-MacBook-Air ~ % cd /Users/adityatomar/driftguard
+python3 -m venv venv
+pip install -r requirements.txt
+uvicorn driftguard.api:app --reload --port 8000
+
+
+
+cd /Users/adityatomar/driftguard/frontend
+adityatomar@Adityas-MacBook-Air frontend % npm install
+npm start
+
+
+curl -X POST http://localhost:8000/api/seed

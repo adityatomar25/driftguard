@@ -1,0 +1,163 @@
+%% DriftGuard Architecture and Flow Diagrams (Mermaid)
+
+%% 1. Context Diagram
+flowchart LR
+    subgraph Users
+        Admin[Administrator]
+        Operator[Operator (DevOps/SRE)]
+        Viewer[Viewer / Stakeholder]
+    end
+
+    subgraph Cluster[Runtime Environment]
+        subgraph K8s[Kubernetes / Host]
+            API[FastAPI Backend Service]
+            FE[React Frontend (SPA)]
+            DB[(SQLite Database)]
+            Cron[Drift Detection CronJob]
+        end
+    end
+
+    subgraph IaC[Infrastructure-as-Code & Cloud]
+        Repo["IaC Repo (e.g., Terraform)"]
+        Cloud[(Cloud / Target Infrastructure)]
+    end
+
+    Admin -->|Configure, Deploy, Policies| API
+    Operator -->|Use Dashboard| FE
+    Viewer -->|Read-only Dashboard| FE
+
+    FE -->|HTTP / JSON ( /api/... )| API
+    API -->|Read/Write Events & Audit| DB
+
+    Cron -->|Run Drift Pipeline| API
+    Cron --> Repo
+    Cron --> Cloud
+
+    Repo --> Cron
+    Cloud --> Cron
+
+
+%% 2. High-Level Architecture Diagram
+flowchart TB
+    subgraph Frontend
+        FE2[React SPA<br/>/ Dashboard]
+    end
+
+    subgraph Backend[Backend API]
+        API2[FastAPI Service]
+        Storage[Storage Layer (SQLAlchemy)]
+    end
+
+    subgraph Data[Persistence]
+        DB2[(SQLite DB<br/>Drift Events & Audit)]
+    end
+
+    subgraph Scheduler
+        Cron2[Drift Detection Job<br/>(CronJob / Script)]
+        Pipeline[Drift Detection Pipeline]
+    end
+
+    subgraph External[External Systems]
+        IaCRepo["IaC Repo (Terraform code/state)"]
+        Cloud2[(Cloud / Target Infrastructure)]
+    end
+
+    FE2 -->|REST / JSON| API2
+    API2 --> Storage
+    Storage --> DB2
+
+    Cron2 --> Pipeline
+    Pipeline --> IaCRepo
+    Pipeline --> Cloud2
+    Pipeline --> API2
+
+
+%% 3. Data Flow Diagram (DFD - Level 0)
+flowchart LR
+    IaCRepo2["IaC Definitions / State"]
+    Cloud3[(Actual Infrastructure State)]
+    Cron3[Scheduler / Cron]
+    Pipeline2[Drift Detection Pipeline]
+    API3[API Service]
+    DB3[(SQLite DB)]
+    FE3[Web Dashboard]
+    Operator2[Operator]
+
+    Cron3 -->|Trigger| Pipeline2
+    IaCRepo2 -->|Desired State| Pipeline2
+    Cloud3 -->|Actual State| Pipeline2
+
+    Pipeline2 -->|Drift Events, Audit Entries| API3
+    API3 -->|Persist| DB3
+
+    Operator2 -->|HTTP Requests| FE3
+    FE3 -->|API Calls| API3
+    API3 -->|Query| DB3
+    DB3 -->|Events, Metrics, Audit| API3
+    API3 -->|JSON Responses| FE3
+
+
+%% 4. Sequence Diagram: Scheduled Drift Check and Reconcile
+sequenceDiagram
+    participant Cron as Scheduler / CronJob
+    participant Pipe as Drift Pipeline Script
+    participant IaC as IaC Repo (Terraform)
+    participant Cloud as Cloud / Infra
+    participant API as FastAPI Backend
+    participant DB as SQLite DB
+    participant FE as React Frontend
+    participant Op as Operator
+
+    Cron->>Pipe: Trigger drift check (scheduled)
+    Pipe->>IaC: Read desired state / plan
+    Pipe->>Cloud: Fetch actual state
+    Pipe->>Pipe: Compare desired vs actual
+    Pipe->>API: POST /api/events (drift events)
+    API->>DB: Insert DriftEvent & AuditEntry
+    API-->>Pipe: 201 Created / summary
+
+    Op->>FE: Open dashboard / refresh
+    FE->>API: GET /api/metrics
+    FE->>API: GET /api/events?status=pending
+    API->>DB: Query events & metrics
+    DB-->>API: Result set
+    API-->>FE: JSON (events, metrics)
+    FE-->>Op: Render drift list & KPIs
+
+    Op->>FE: Click "Reconcile" on event
+    FE->>API: POST /api/events/{id}/action (reconcile)
+    API->>DB: Update DriftEvent, insert AuditEntry
+    API-->>FE: Action result (e.g., pending/ok)
+
+
+%% 5. Sequence Diagram: Demo Data Seeding
+sequenceDiagram
+    participant FE as Frontend (React)
+    participant API as Backend (FastAPI)
+    participant DB as SQLite DB
+
+    FE->>API: POST /api/seed (optional params: count, reset)
+    API->>DB: (Optional) DELETE existing events/audit (if reset)
+    API->>DB: INSERT synthetic DriftEvent records
+    API->>DB: INSERT corresponding AuditEntry records
+    DB-->>API: Insert OK
+    API-->>FE: { message, total }
+    FE->>API: GET /api/metrics, /api/events
+    API->>DB: Query metrics & events
+    DB-->>API: Result set
+    API-->>FE: JSON
+
+
+%% 6. Component Relationship Overview (Optional Simplified View)
+flowchart TB
+    UserA[Admin / Operator / Viewer]
+    FE4[React Dashboard]
+    API4[FastAPI API]
+    DB4[(SQLite)]
+    Cron4[Drift CronJob]
+
+    UserA --> FE4
+    FE4 -->|/api/*| API4
+    API4 --> DB4
+    Cron4 -->|Runs drift checks,
+produces events via API| API4
